@@ -1,0 +1,88 @@
+<section class="hero-banner">
+  <div class="hero-inner">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a routerLink="/">Home</a>
+      <span>/</span>
+      <span>Apply</span>
+    </nav>
+
+    <span class="intake-pill">{{ intake }}</span>
+
+    <h1>Apply for <span>Admission</span></h1>
+    <p>
+      The Dodoma Institute of Development and Entrepreneurship Studies invites all qualified candidates
+      to apply for Certificate and Diploma programmes for the academic year 2026/2027.
+    </p>
+
+    <div class="hero-actions">
+      <a [href]="applyUrl" target="_blank" rel="noopener" class="btn btn-gold">Start Application →</a>
+      <a routerLink="/contact" class="btn btn-white">Get Help</a>
+    </div>
+  </div>
+</section>
+
+<section class="apply-layout container">
+  <div class="main-col">
+    <article class="card">
+      <h2 class="card-title">How to apply</h2>
+      <ol class="steps">
+        @for (s of steps; track s.title; let i = $index) {
+          <li>
+            <span class="num">{{ i + 1 }}</span>
+            <div>
+              <h3>{{ s.title }}</h3>
+              <p>{{ s.text }}</p>
+            </div>
+          </li>
+        }
+      </ol>
+    </article>
+
+    <article class="card notice">
+      <span class="notice-icon">!</span>
+      <div>
+        <h3>Before you start</h3>
+        <p>
+          If you have a problem during the application process, contact the Help Desk on
+          <a href="tel:+255685506450">0685 506 450</a> or <a href="tel:+255679550047">0679 550 047</a>.
+        </p>
+      </div>
+    </article>
+
+    <article class="card">
+      <h2 class="card-title">Admission confirmation</h2>
+      <ul class="check-list">
+        <li>Use the confirmation code sent to your phone number to confirm your DIDES admission.</li>
+        <li>If you have not yet confirmed your admission, open the portal and use the Confirm Admission link.</li>
+      </ul>
+      <a [href]="portalLoginUrl" target="_blank" rel="noopener" class="btn btn-primary">Confirm Admission →</a>
+    </article>
+  </div>
+
+  <aside class="side-col">
+    <article class="card">
+      <h2 class="card-title">Applicant login</h2>
+      <p class="muted">Already applied? Sign in with your index number and the year you completed your studies.</p>
+      <a [href]="portalLoginUrl" target="_blank" rel="noopener" class="btn btn-primary full">Login to Portal</a>
+      <p class="signup">
+        Don't have an account?
+        <a [href]="applyUrl" target="_blank" rel="noopener">Create account</a>
+      </p>
+    </article>
+
+    <article class="card help">
+      <h2 class="card-title">Contact details</h2>
+      <p class="help-label">Admission</p>
+      <p><a href="tel:+255685506450">0685 506 450</a> / <a href="tel:+255679550047">0679 550 047</a></p>
+
+      <p class="help-label">Technical support</p>
+      <p><a href="tel:+255765970455">0765 970 455</a></p>
+
+      <p class="help-label">Email</p>
+      <p><a href="mailto:info@dides.ac.tz">info@dides.ac.tz</a></p>
+
+      <p class="help-label">Working hours</p>
+      <p>Monday to Friday, 8:00 AM – 5:00 PM</p>
+    </article>
+  </aside>
+</section>

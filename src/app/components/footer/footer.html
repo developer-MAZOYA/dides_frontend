@@ -1,0 +1,58 @@
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="brand-col">
+      <img src="dides.png" alt="DIDES logo" class="footer-logo" />
+      <h3>DIDES</h3>
+      <p class="tagline">Dodoma Institute of Development and Entrepreneurship Studies</p>
+      <p class="reg">Registered by NACTVET with accreditation status</p>
+    </div>
+
+    <div class="col">
+      <h4>Quick Links</h4>
+      <ul>
+        @for (l of quickLinks; track l.label) {
+          <li>
+            @if (l.external) {
+              <a [href]="l.url" target="_blank" rel="noopener">{{ l.label }}</a>
+            } @else {
+              <a [routerLink]="l.url">{{ l.label }}</a>
+            }
+          </li>
+        }
+      </ul>
+    </div>
+
+    <div class="col">
+      <h4>Programmes</h4>
+      <ul>
+        @for (p of programmes; track p) {
+          <li><a routerLink="/programmes">{{ p }}</a></li>
+        }
+      </ul>
+
+      <h4 class="partners-title">Partners</h4>
+      <ul>
+        @for (p of partners; track p.label) {
+          <li><a [href]="p.url" target="_blank" rel="noopener">{{ p.label }}</a></li>
+        }
+      </ul>
+    </div>
+
+    <div class="col contact">
+      <h4>Contact Us</h4>
+      <p>📍 P.O. Box 2032, Dodoma – Nzuguni</p>
+      <p>📧 <a href="mailto:info@dides.ac.tz">info@dides.ac.tz</a></p>
+      <p>📧 <a href="mailto:didesvet@gmail.com">didesvet@gmail.com</a></p>
+      <p>📞 <a href="tel:+255685506450">+255 685 506 450</a></p>
+      <p>📞 <a href="tel:+255679550047">+255 679 550 047</a></p>
+      <p>🕗 Mon – Fri, 8:00 AM – 5:00 PM</p>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <div class="bottom-inner">
+      <p>© {{ year }} DIDES. All rights reserved.</p>
+      <p>Technical training · Community Development · Agriculture Production</p>
+    </div>
+  </div>
+</footer>

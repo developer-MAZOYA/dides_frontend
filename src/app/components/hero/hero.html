@@ -1,0 +1,22 @@
+<section class="hero">
+  @for (s of slides; track s.title; let i = $index) {
+    @if (i === index()) {
+      <img class="bg" [src]="s.image" alt="" />
+      <div class="content">
+        <h1>{{ s.title }} <span>{{ s.highlight }}</span></h1>
+        <span class="rule"></span>
+        <p>{{ s.text }}</p>
+        <a routerLink="/programmes" class="btn">Discover more →</a>
+      </div>
+    }
+  }
+
+  <button class="arrow left" (click)="prev()" aria-label="Previous slide">‹</button>
+  <button class="arrow right" (click)="next()" aria-label="Next slide">›</button>
+
+  <div class="dots">
+    @for (s of slides; track s.title; let i = $index) {
+      <button [class.active]="i === index()" (click)="index.set(i)" [attr.aria-label]="'Slide ' + (i + 1)"></button>
+    }
+  </div>
+</section>

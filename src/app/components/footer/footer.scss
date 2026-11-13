@@ -1,0 +1,137 @@
+:host { display: block; }
+
+.footer {
+  background: linear-gradient(180deg, var(--sky) 0%, var(--light) 100%);
+  color: var(--navy);
+  border-top: 5px solid var(--gold);
+}
+
+.footer-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 2rem;
+  display: grid;
+  grid-template-columns: 1.3fr 1fr 1fr 1.4fr;
+  gap: 2.5rem;
+}
+
+.brand-col {
+  .footer-logo {
+    width: 84px;
+    height: 84px;
+    object-fit: contain;
+    background: #fff;
+    border-radius: 16px;
+    padding: 8px;
+    box-shadow: 0 6px 16px rgba(22, 61, 92, 0.15);
+  }
+
+  h3 {
+    color: var(--purple);
+    margin: 1rem 0 0.3rem;
+    font-size: 1.5rem;
+    letter-spacing: 0.04em;
+  }
+
+  .tagline {
+    margin: 0 0 0.5rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+
+  .reg {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.88rem;
+  }
+}
+
+h4 {
+  position: relative;
+  margin: 0 0 1rem;
+  padding-bottom: 0.6rem;
+  color: var(--navy);
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 36px;
+    height: 3px;
+    background: var(--purple);
+    border-radius: 2px;
+  }
+}
+
+.partners-title { margin-top: 1.8rem; }
+
+ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+li a {
+  display: inline-block;
+  padding: 0.3rem 0;
+  color: var(--navy);
+  text-decoration: none;
+  transition: color 0.2s, transform 0.2s;
+
+  &:hover {
+    color: var(--purple);
+    transform: translateX(4px);
+  }
+}
+
+.contact p {
+  margin: 0.45rem 0;
+  font-size: 0.95rem;
+
+  a {
+    color: var(--navy);
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover { color: var(--purple); }
+  }
+}
+
+.bottom {
+  border-top: 1px solid rgba(22, 61, 92, 0.15);
+}
+
+.bottom-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: 0.88rem;
+  color: var(--navy);
+
+  p { margin: 0; }
+}
+
+@media (max-width: 900px) {
+  .footer-inner {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .footer-inner {
+    grid-template-columns: 1fr;
+  }
+
+  .bottom-inner {
+    flex-direction: column;
+    text-align: center;
+  }
+}

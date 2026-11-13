@@ -1,0 +1,110 @@
+<div class="ticker">
+  <span class="badge">NEWS</span>
+  <span class="date">{{ news[0].date }}</span>
+  <span class="text">{{ news[0].title }}</span>
+</div>
+
+<app-hero />
+
+<section class="intro container">
+  <div>
+    <span class="section-tag">Welcome to DIDES</span>
+    <h2>Building skills for <span>public service</span> and community development</h2>
+    <p>
+      The Dodoma Institute of Development and Entrepreneurship Studies is registered by NACTVET with
+      accreditation status. We are located at Nzuguni Ward, about 2 kilometres from the Dodoma Bus Terminal.
+    </p>
+    <a routerLink="/about" class="btn btn-primary">About the institute</a>
+  </div>
+
+  <div class="vm">
+    <div class="vm-card">
+      <h3>Our Vision</h3>
+      <p>To be a centre of excellence in public administration studies and other public service related disciplines in the country.</p>
+    </div>
+    <div class="vm-card">
+      <h3>Our Mission</h3>
+      <p>To engage in excellent teaching and improve the efficiency and effectiveness of public administration through competency-based training and applied research.</p>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="container">
+    <span class="section-tag">Our Programmes</span>
+    <h2 class="section-title">Courses we <span>offer</span></h2>
+    <p class="section-sub">Certificate and diploma training designed for practical work in communities and farms.</p>
+
+    <div class="carousel">
+      @for (p of programmes; track p.title) {
+        <article class="program-card">
+          <img [src]="p.image" [alt]="p.title" />
+          <div class="body">
+            <span class="level">{{ p.level }}</span>
+            <h3>{{ p.title }}</h3>
+            <p>{{ p.description }}</p>
+            <a routerLink="/programmes">View programme →</a>
+          </div>
+        </article>
+      }
+    </div>
+  </div>
+</section>
+
+<section class="container">
+  <span class="section-tag">Why DIDES</span>
+  <h2 class="section-title">What makes us <span>different</span></h2>
+  <p class="section-sub">Training that combines theory, practice, and entrepreneurship.</p>
+
+  <div class="features">
+    @for (f of features; track f.title) {
+      <div class="feature">
+        <span class="icon">{{ f.icon }}</span>
+        <h3>{{ f.title }}</h3>
+        <p>{{ f.text }}</p>
+      </div>
+    }
+  </div>
+</section>
+<section class="band">
+  <div class="container">
+    <span class="section-tag">College Moments</span>
+    <h2 class="section-title">Life at <span>DIDES</span></h2>
+    <p class="section-sub">Graduations, staff and students celebrating their achievements.</p>
+
+   <div class="gallery">
+  @for (g of gallery; track g.src) {
+    <figure class="tile">
+      <img [src]="g.src" [alt]="g.caption" loading="lazy" />
+      <figcaption>{{ g.caption }}</figcaption>
+    </figure>
+  }
+</div>
+  </div>
+</section>
+<section class="band">
+  <div class="container">
+    <span class="section-tag">Latest News</span>
+    <h2 class="section-title">Announcements</h2>
+
+    <div class="news-grid">
+      @for (n of news; track n.link) {
+        <article class="news-card">
+          <time>{{ n.date }}</time>
+          <h3>{{ n.title }}</h3>
+          <p>{{ n.text }}</p>
+          <a [href]="n.link" target="_blank" rel="noopener">Read more →</a>
+        </article>
+      }
+    </div>
+  </div>
+</section>
+
+<section class="cta">
+  <h2>Ready to start your journey?</h2>
+  <p>Applications are open for the March and September 2026/2027 intakes.</p>
+  <div class="actions">
+    <a routerLink="/apply" class="btn btn-primary">Apply Now →</a>
+    <a routerLink="/contact" class="btn btn-white">Contact Us</a>
+  </div>
+</section>

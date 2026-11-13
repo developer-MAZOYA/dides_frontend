@@ -1,0 +1,31 @@
+<header class="site-header">
+  <div class="top-row">
+    <a routerLink="/" class="logo logo-left" aria-label="DIDES home">
+      <img src="dides.png" alt="DIDES logo" />
+    </a>
+
+    <div class="titles">
+      <h1>DODOMA INSTITUTE OF DEVELOPMENT AND ENTREPRENEURSHIP STUDIES (DIDES)</h1>
+      <h2>CHUO KIMESAJILIWA NA SERIKALI - REG/BTP/085</h2>
+    </div>
+
+    <a routerLink="/" class="logo logo-right" aria-label="NACTVET">
+      <img src="NACTVET.png" alt="NACTVET logo" />
+    </a>
+  </div>
+
+  <nav class="main-nav">
+    <button class="menu-toggle" (click)="open.set(!open())" aria-label="Toggle menu">☰</button>
+
+    <ul class="menu-links" [class.open]="open()" (click)="open.set(false)">
+      <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Home</a></li>
+      <li><a routerLink="/about" routerLinkActive="active">About Us</a></li>
+      <li><a href="#">Departments</a></li>
+      <li><a routerLink="/programmes" routerLinkActive="active">Programmes</a></li>
+      <li><a href="#">ICT &amp; Services</a></li>
+      <li><a routerLink="/news" routerLinkActive="active">News</a></li>
+      <li><a routerLink="/contact" routerLinkActive="active">Contact us</a></li>
+      <li><a routerLink="/apply" routerLinkActive="active" class="apply-link">Apply Now</a></li>
+    </ul>
+  </nav>
+</header>
