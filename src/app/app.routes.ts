@@ -30,6 +30,11 @@ export const routes: Routes = [
   path: 'apply',
   loadComponent: () => import('./pages/apply/apply').then(m => m.ApplyComponent),
   title: 'Apply for Admission | DIDES',
+  },
+  {
+  path: 'admission',
+  loadComponent: () => import('./pages/admission/admission').then(m => m.AdmissionComponent),
+  title: 'Online Admission | DIDES',
 },
   { path: '**', redirectTo: '' },
 ];

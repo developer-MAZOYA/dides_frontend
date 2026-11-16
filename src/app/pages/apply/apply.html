@@ -15,7 +15,7 @@
     </p>
 
     <div class="hero-actions">
-      <a [href]="applyUrl" target="_blank" rel="noopener" class="btn btn-gold">Start Application →</a>
+      <a routerLink="/admission" class="btn btn-gold">Start Application →</a>
       <a routerLink="/contact" class="btn btn-white">Get Help</a>
     </div>
   </div>
@@ -55,7 +55,7 @@
         <li>Use the confirmation code sent to your phone number to confirm your DIDES admission.</li>
         <li>If you have not yet confirmed your admission, open the portal and use the Confirm Admission link.</li>
       </ul>
-      <a [href]="portalLoginUrl" target="_blank" rel="noopener" class="btn btn-primary">Confirm Admission →</a>
+      <a routerLink="/admission" class="btn btn-primary">Confirm Admission →</a>
     </article>
   </div>
 
@@ -63,7 +63,7 @@
     <article class="card">
       <h2 class="card-title">Applicant login</h2>
       <p class="muted">Already applied? Sign in with your index number and the year you completed your studies.</p>
-      <a [href]="portalLoginUrl" target="_blank" rel="noopener" class="btn btn-primary full">Login to Portal</a>
+      <a routerLink="/admission" class="btn btn-primary full">Login to Portal</a>
       <p class="signup">
         Don't have an account?
         <a [href]="applyUrl" target="_blank" rel="noopener">Create account</a>

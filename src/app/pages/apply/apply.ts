@@ -13,8 +13,8 @@ interface ApplyStep {
   styleUrl: './apply.scss',
 })
 export class ApplyComponent {
-  readonly applyUrl = 'https://dides.ac.tz/apply/online';
-  readonly portalLoginUrl = 'https://dides.ac.tz/apply/login?login=active';
+  readonly applyUrl = '/admission';
+  //readonly portalLoginUrl = 'https://dides.ac.tz/apply/login?login=active';
   readonly intake = 'September Intake 2026/2027';
 
   steps: ApplyStep[] = [

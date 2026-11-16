@@ -1,0 +1,397 @@
+<section class="page-hero">
+  <div class="hero-inner container">
+    <span class="section-tag">Online Admission</span>
+    <h1>Application for <span>2026/2027</span></h1>
+    <p>Complete each step in order. Your details are saved as you go.</p>
+  </div>
+</section>
+
+<section class="wizard container">
+  @if (completed()) {
+    <div class="panel success">
+      <div class="check">✓</div>
+      <h2>Application submitted</h2>
+      <p>
+        Your application number is <strong>{{ admissionId() }}</strong>. Keep it for your records.
+        Use the confirmation code sent to your phone to confirm your admission.
+      </p>
+      <a routerLink="/" class="btn btn-primary">Back to home</a>
+    </div>
+  } @else {
+    <ol class="stepper">
+      @for (s of steps; track s; let i = $index) {
+        <li [class.active]="i === stepIndex()" [class.done]="i < stepIndex()">
+          <span class="dot">{{ i < stepIndex() ? '✓' : i + 1 }}</span>
+          <span class="label">{{ labels[s] }}</span>
+        </li>
+      }
+    </ol>
+
+    <div class="panel">
+      @if (error()) {
+        <div class="alert" role="alert">{{ error() }}</div>
+      }
+
+      @switch (currentStep()) {
+
+        @case ('start') {
+          <h2>Start your application</h2>
+          <p class="hint">Enter your name and email. These create your application.</p>
+
+          <div class="grid" [formGroup]="startForm">
+            <div class="field" [class.invalid]="bad(startForm, 'firstname')">
+              <label>First name *</label>
+              <input formControlName="firstname" />
+              @if (bad(startForm, 'firstname')) { <small>Required</small> }
+            </div>
+            <div class="field" [class.invalid]="bad(startForm, 'lastname')">
+              <label>Last name *</label>
+              <input formControlName="lastname" />
+              @if (bad(startForm, 'lastname')) { <small>Required</small> }
+            </div>
+            <div class="field full" [class.invalid]="bad(startForm, 'email')">
+              <label>Email *</label>
+              <input type="email" formControlName="email" />
+              @if (bad(startForm, 'email')) { <small>Enter a valid email</small> }
+            </div>
+          </div>
+
+          <div class="actions">
+            <span></span>
+            <button class="btn btn-primary" [disabled]="saving()" (click)="saveStart()">
+              {{ saving() ? 'Saving…' : 'Save & continue →' }}
+            </button>
+          </div>
+        }
+
+        @case ('personal') {
+          <h2>Personal information</h2>
+          <p class="hint">Fields marked * are required.</p>
+
+          <div class="grid" [formGroup]="personalForm">
+            <div class="field" [class.invalid]="bad(personalForm, 'firstname')">
+              <label>First name *</label>
+              <input formControlName="firstname" />
+              @if (bad(personalForm, 'firstname')) { <small>Required</small> }
+            </div>
+            <div class="field" [class.invalid]="bad(personalForm, 'lastname')">
+              <label>Last name *</label>
+              <input formControlName="lastname" />
+              @if (bad(personalForm, 'lastname')) { <small>Required</small> }
+            </div>
+            <div class="field" [class.invalid]="bad(personalForm, 'email')">
+              <label>Email *</label>
+              <input type="email" formControlName="email" />
+              @if (bad(personalForm, 'email')) { <small>Enter a valid email</small> }
+            </div>
+            <div class="field" [class.invalid]="bad(personalForm, 'mobileNumber')">
+              <label>Mobile number *</label>
+              <input formControlName="mobileNumber" />
+              @if (bad(personalForm, 'mobileNumber')) { <small>Required</small> }
+            </div>
+            <div class="field" [class.invalid]="bad(personalForm, 'dateOfBirth')">
+              <label>Date of birth *</label>
+              <input type="date" formControlName="dateOfBirth" />
+              @if (bad(personalForm, 'dateOfBirth')) { <small>Required</small> }
+            </div>
+            <div class="field" [class.invalid]="bad(personalForm, 'sex')">
+              <label>Sex *</label>
+              <select formControlName="sex">
+                <option value="" disabled>Select</option>
+                @for (o of sexOptions; track o) { <option [value]="o">{{ o }}</option> }
+              </select>
+              @if (bad(personalForm, 'sex')) { <small>Required</small> }
+            </div>
+            <div class="field" [class.invalid]="bad(personalForm, 'maritalStatus')">
+              <label>Marital status *</label>
+              <select formControlName="maritalStatus">
+                @for (o of maritalOptions; track o) { <option [value]="o">{{ o }}</option> }
+              </select>
+            </div>
+            <div class="field" [class.invalid]="bad(personalForm, 'citizenship')">
+              <label>Citizenship *</label>
+              <input formControlName="citizenship" />
+              @if (bad(personalForm, 'citizenship')) { <small>Required</small> }
+            </div>
+            <div class="field full" [class.invalid]="bad(personalForm, 'homeAddress')">
+              <label>Home address *</label>
+              <input formControlName="homeAddress" />
+              @if (bad(personalForm, 'homeAddress')) { <small>Required</small> }
+            </div>
+            <div class="field full" [class.invalid]="bad(personalForm, 'contactAddress')">
+              <label>Contact address *</label>
+              <input formControlName="contactAddress" />
+              @if (bad(personalForm, 'contactAddress')) { <small>Required</small> }
+            </div>
+            <label class="check-row full">
+              <input type="checkbox" formControlName="disability" />
+              I have a disability
+            </label>
+          </div>
+
+          <div class="actions">
+            <button class="btn btn-outline" (click)="back()">← Back</button>
+            <button class="btn btn-primary" [disabled]="saving()" (click)="savePersonal()">
+              {{ saving() ? 'Saving…' : 'Save & continue →' }}
+            </button>
+          </div>
+        }
+
+        @case ('kin') {
+          <h2>Next of kin</h2>
+          <p class="hint">A person we can contact in an emergency.</p>
+
+          <div class="grid" [formGroup]="kinForm">
+            <div class="field" [class.invalid]="bad(kinForm, 'name')">
+              <label>Full name *</label>
+              <input formControlName="name" />
+              @if (bad(kinForm, 'name')) { <small>Required</small> }
+            </div>
+            <div class="field" [class.invalid]="bad(kinForm, 'mobileNumber')">
+              <label>Mobile number *</label>
+              <input formControlName="mobileNumber" />
+              @if (bad(kinForm, 'mobileNumber')) { <small>Required</small> }
+            </div>
+            <div class="field" [class.invalid]="bad(kinForm, 'residence')">
+              <label>Residence *</label>
+              <input formControlName="residence" />
+              @if (bad(kinForm, 'residence')) { <small>Required</small> }
+            </div>
+            <div class="field" [class.invalid]="bad(kinForm, 'relationship')">
+              <label>Relationship *</label>
+              <select formControlName="relationship">
+                <option value="" disabled>Select</option>
+                @for (o of relationships; track o) { <option [value]="o">{{ o }}</option> }
+              </select>
+              @if (bad(kinForm, 'relationship')) { <small>Required</small> }
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="btn btn-outline" (click)="back()">← Back</button>
+            <button class="btn btn-primary" [disabled]="saving()" (click)="saveKin()">
+              {{ saving() ? 'Saving…' : 'Save & continue →' }}
+            </button>
+          </div>
+        }
+
+        @case ('education') {
+          <h2>Education background</h2>
+          <p class="hint">Add each qualification, starting with the most recent or the PSLE.</p>
+
+          <div [formGroup]="educationForm">
+            <div formArrayName="rows">
+              @for (row of rows.controls; track $index; let i = $index) {
+                <div class="edu-row" [formGroupName]="i">
+                  <div class="edu-head">
+                    <strong>Qualification {{ i + 1 }}</strong>
+                    @if (rows.length > 1) {
+                      <button type="button" class="link danger" (click)="removeRow(i)">Remove</button>
+                    }
+                  </div>
+                  <div class="grid">
+                    <div class="field">
+                      <label>Qualification *</label>
+                      <select formControlName="qualificationType">
+                        <option value="" disabled>Select</option>
+                        @for (o of qualificationOptions; track o) { <option [value]="o">{{ o }}</option> }
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label>School / institution *</label>
+                      <input formControlName="schoolName" />
+                    </div>
+                    <div class="field">
+                      <label>From year *</label>
+                      <input type="number" formControlName="fromYear" />
+                    </div>
+                    <div class="field">
+                      <label>To year *</label>
+                      <input type="number" formControlName="toYear" />
+                    </div>
+                    <div class="field">
+                      <label>Country *</label>
+                      <input formControlName="country" />
+                    </div>
+                    <div class="field">
+                      <label>Division / grade *</label>
+                      <input formControlName="division" />
+                    </div>
+                    <div class="field full">
+                      <label>Index number *</label>
+                      <input formControlName="indexNumber" />
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <button type="button" class="btn btn-outline add" (click)="addRow()">+ Add another qualification</button>
+
+          <div class="actions">
+            <button class="btn btn-outline" (click)="back()">← Back</button>
+            <button class="btn btn-primary" [disabled]="saving()" (click)="saveEducation()">
+              {{ saving() ? 'Saving…' : 'Save & continue →' }}
+            </button>
+          </div>
+        }
+
+        @case ('sponsor') {
+          <h2>Sponsorship</h2>
+          <p class="hint">Do you have a sponsor who will pay your fees?</p>
+
+          <div class="choice">
+            <button type="button" [class.selected]="hasSponsor() === true" (click)="hasSponsor.set(true)">
+              Yes, I have a sponsor
+            </button>
+            <button type="button" [class.selected]="hasSponsor() === false" (click)="hasSponsor.set(false)">
+              No sponsor
+            </button>
+          </div>
+
+          @if (hasSponsor() === true) {
+            <div class="grid sponsor-grid" [formGroup]="sponsorForm">
+              <div class="field" [class.invalid]="bad(sponsorForm, 'sponsorType')">
+                <label>Sponsor type *</label>
+                <select formControlName="sponsorType">
+                  <option value="" disabled>Select</option>
+                  @for (o of sponsorTypes; track o) { <option [value]="o">{{ o }}</option> }
+                </select>
+                @if (bad(sponsorForm, 'sponsorType')) { <small>Required</small> }
+              </div>
+              <div class="field" [class.invalid]="bad(sponsorForm, 'sponsorFullName')">
+                <label>Sponsor full name *</label>
+                <input formControlName="sponsorFullName" />
+                @if (bad(sponsorForm, 'sponsorFullName')) { <small>Required</small> }
+              </div>
+              <div class="field" [class.invalid]="bad(sponsorForm, 'sponsorPostalAddress')">
+                <label>Postal address *</label>
+                <input formControlName="sponsorPostalAddress" />
+                @if (bad(sponsorForm, 'sponsorPostalAddress')) { <small>Required</small> }
+              </div>
+              <div class="field" [class.invalid]="bad(sponsorForm, 'sponsorMobileNumber')">
+                <label>Mobile number *</label>
+                <input formControlName="sponsorMobileNumber" />
+                @if (bad(sponsorForm, 'sponsorMobileNumber')) { <small>Required</small> }
+              </div>
+              <div class="field" [class.invalid]="bad(sponsorForm, 'sponsorEmailAddress')">
+                <label>Email *</label>
+                <input type="email" formControlName="sponsorEmailAddress" />
+                @if (bad(sponsorForm, 'sponsorEmailAddress')) { <small>Enter a valid email</small> }
+              </div>
+              <div class="field" [class.invalid]="bad(sponsorForm, 'applicantName')">
+                <label>Applicant name *</label>
+                <input formControlName="applicantName" />
+                @if (bad(sponsorForm, 'applicantName')) { <small>Required</small> }
+              </div>
+              <div class="field full" [class.invalid]="bad(sponsorForm, 'institutionName')">
+                <label>Institution name *</label>
+                <input formControlName="institutionName" />
+                @if (bad(sponsorForm, 'institutionName')) { <small>Required</small> }
+              </div>
+              <label class="check-row full" [class.invalid]="bad(sponsorForm, 'agreeTermsOfDides')">
+                <input type="checkbox" formControlName="agreeTermsOfDides" />
+                I agree to the terms of DIDES *
+              </label>
+            </div>
+          }
+
+          <div class="actions">
+            <button class="btn btn-outline" (click)="back()">← Back</button>
+            @if (hasSponsor() === false) {
+              <button class="btn btn-primary" (click)="skipSponsor()">Skip, no sponsor →</button>
+            } @else if (hasSponsor() === true) {
+              <button class="btn btn-primary" [disabled]="saving()" (click)="saveSponsor()">
+                {{ saving() ? 'Saving…' : 'Save & continue →' }}
+              </button>
+            }
+          </div>
+        }
+@case ('courses') {
+  <h2>Select courses</h2>
+  <p class="hint">Open the list and tick the programme(s) you want to apply for.</p>
+
+  <div class="dropdown">
+    <button
+      type="button"
+      class="dropdown-toggle"
+      [class.open]="coursesOpen()"
+      [attr.aria-expanded]="coursesOpen()"
+      (click)="toggleDropdown()"
+    >
+      <span>
+        @if (selectedCourseIds().length === 0) {
+          Select course(s)
+        } @else {
+          {{ selectedCourseIds().length }} course(s) selected
+        }
+      </span>
+      <span class="caret">▾</span>
+    </button>
+
+    @if (coursesOpen()) {
+      <div class="dropdown-backdrop" (click)="closeDropdown()"></div>
+      <ul class="dropdown-menu" role="listbox">
+        @for (c of courses(); track c.id) {
+          <li>
+            <label [class.selected]="isSelected(c.id)">
+              <input
+                type="checkbox"
+                [checked]="isSelected(c.id)"
+                (change)="toggleCourse(c.id, $any($event.target).checked)"
+              />
+              <span>{{ c.name }}</span>
+            </label>
+          </li>
+        } @empty {
+          <li class="empty">No courses available</li>
+        }
+      </ul>
+    }
+  </div>
+
+  @if (selectedNames().length > 0) {
+    <div class="chips">
+      @for (name of selectedNames(); track $index) {
+        <span class="chip">{{ name }}</span>
+      }
+    </div>
+  }
+
+  <div class="actions">
+    <button class="btn btn-outline" (click)="back()">← Back</button>
+    <button class="btn btn-primary" [disabled]="saving()" (click)="saveCourses()">
+      {{ saving() ? 'Saving…' : 'Save & continue →' }}
+    </button>
+  </div>
+}
+
+        @case ('review') {
+          <h2>Review and submit</h2>
+          <p class="hint">Check your details. Once submitted, you cannot edit the application here.</p>
+
+          <dl class="summary">
+            <dt>Application number</dt>
+            <dd>{{ admissionId() }}</dd>
+            <dt>Name</dt>
+            <dd>{{ startForm.value.firstname }} {{ startForm.value.lastname }}</dd>
+            <dt>Email</dt>
+            <dd>{{ startForm.value.email }}</dd>
+            <dt>Sponsor</dt>
+            <dd>{{ hasSponsor() ? 'Yes' : 'None' }}</dd>
+            <dt>Courses selected</dt>
+            <dd>{{ selectedCourseIds().length }}</dd>
+          </dl>
+
+          <div class="actions">
+            <button class="btn btn-outline" (click)="back()">← Back</button>
+            <button class="btn btn-gold" [disabled]="saving()" (click)="submit()">
+              {{ saving() ? 'Submitting…' : 'Submit application' }}
+            </button>
+          </div>
+        }
+      }
+    </div>
+  }
+</section>
