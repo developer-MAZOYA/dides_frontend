@@ -1,1 +1,93 @@
-<p>news works!</p>
+<section class="news-page">
+  <div class="container">
+
+    <header class="page-head head-row">
+      <div>
+        <span class="section-tag">Latest News</span>
+        <h1>News & <span>Announcements</span></h1>
+        <p>Updates from DIDES, loaded from the institute's news page.</p>
+      </div>
+
+      <label class="search">
+        <span class="sr-only">Search news</span>
+        <input
+          type="search"
+          placeholder="Search news…"
+          [value]="query()"
+          (input)="onSearch($event)"
+        />
+      </label>
+    </header>
+
+    @if (error(); as message) {
+      <div class="state error">
+        <p>{{ message }}</p>
+        <button class="btn btn-outline" type="button" (click)="retry()">Try again</button>
+      </div>
+
+    } @else if (loading()) {
+      <div class="news-grid">
+        @for (i of skeletons; track i) {
+          <div class="skeleton" aria-hidden="true"></div>
+        }
+      </div>
+
+    } @else if (!featured()) {
+      <div class="state">
+        <p>{{ query().trim() ? 'No news matches your search.' : 'No news has been published yet.' }}</p>
+      </div>
+
+    } @else {
+      @if (featured(); as f) {
+        <a class="featured" [href]="f.link" target="_blank" rel="noopener">
+          <div class="f-media">
+            @if (f.image; as src) {
+              <img [src]="src" [alt]="f.title" />
+            } @else {
+              <div class="fallback">DIDES</div>
+            }
+          </div>
+
+          <div class="f-body">
+            <span class="pill">{{ f.category }}</span>
+            <h2>{{ f.title }}</h2>
+            <p>{{ f.excerpt }}</p>
+            <div class="meta">
+              @if (f.date) {
+                <time [attr.datetime]="f.date">{{ f.date | date: 'd MMM yyyy' }}</time>
+              }
+              <span class="read">Read the full story →</span>
+            </div>
+          </div>
+        </a>
+      }
+
+      <div class="news-grid">
+        @for (p of rest(); track p.id) {
+          <a class="news-card" [href]="p.link" target="_blank" rel="noopener">
+            <div class="c-media">
+              @if (p.image; as src) {
+                <img [src]="src" [alt]="p.title" loading="lazy" />
+              } @else {
+                <div class="fallback">DIDES</div>
+              }
+            </div>
+
+            <div class="c-body">
+              <span class="pill">{{ p.category }}</span>
+              <h3>{{ p.title }}</h3>
+              <p>{{ p.excerpt }}</p>
+              <div class="c-foot">
+                @if (p.date) {
+                  <time [attr.datetime]="p.date">{{ p.date | date: 'd MMM yyyy' }}</time>
+                }
+                <span class="read">Read more →</span>
+              </div>
+            </div>
+          </a>
+        }
+      </div>
+    }
+
+  </div>
+</section>

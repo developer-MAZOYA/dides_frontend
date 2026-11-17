@@ -1,1 +1,56 @@
-<p>about works!</p>
+<section class="about container">
+  <header class="intro">
+    <span class="section-tag">About DIDES</span>
+    <h1>About <span>Us</span></h1>
+  </header>
+
+  <div class="background">
+    <p>
+      The Dodoma Institute of Development and Entrepreneurship Studies (DIDES) is registered by NACTVET
+      with accreditation status. The institute is located at Nzuguni Ward, about 2 kilometres from the
+      Dodoma Bus Terminal.
+    </p>
+    <p>
+      DIDES offers technical training at Certificate and Ordinary Diploma level in Community Development
+      and Agriculture Production. It also provides short courses and seminars for government officials and
+      other public and private workers. The institute plans to offer degrees in the future.
+    </p>
+  </div>
+
+  <div class="vm-grid">
+    <article class="card">
+      <span class="icon">🔭</span>
+      <h2>Our Vision</h2>
+      <p>
+        To be a centre of excellence in public administration studies and other public service related
+        disciplines in the country.
+      </p>
+    </article>
+
+    <article class="card">
+      <span class="icon">🎯</span>
+      <h2>Our Mission</h2>
+      <p>
+        To improve the efficiency and effectiveness of public administration in Tanzania through
+        comprehensive, competency-based training and applied research.
+      </p>
+    </article>
+  </div>
+
+  <h2 class="section-title">Our <span>Management</span></h2>
+  <p class="section-sub">The people leading DIDES's teaching, administration and departments.</p>
+
+  <div class="staff-grid">
+    @for (member of staff; track member.name) {
+      <article class="staff-card">
+        <div class="photo">
+          <img [src]="member.photo" [alt]="member.name" loading="lazy" />
+        </div>
+        <div class="info">
+          <h3>{{ member.name }}</h3>
+          <p class="role">{{ member.role }}</p>
+        </div>
+      </article>
+    }
+  </div>
+</section>

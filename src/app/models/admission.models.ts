@@ -49,18 +49,15 @@ export interface Sponsor {
   sponsorEmailAddress: string;
   applicantName: string;
   institutionName: string;
-  agreeTermsOfDides: boolean;
 }
-
-export interface CourseSelection {
-  selectedCourseIds: number[];
-}
-
 export interface Course {
-  id: number;
+  id: string;
   name: string;
 }
 
+export interface CourseSelection {
+  selectedCourseIds: string[];
+}
 export interface DraftPersonalInfo {
   id?: number;
   firstname?: string;

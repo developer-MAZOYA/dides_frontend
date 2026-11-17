@@ -12,7 +12,8 @@
 
 .wizard {
   max-width: 920px;
-  padding-top: 2.5rem;
+  margin: 0 auto;
+  padding-top: 0.5rem;
 }
 
 .stepper {
@@ -338,4 +339,20 @@
   border-radius: 999px;
   font-size: 0.85rem;
   font-weight: 600;
+}
+.terms {
+  margin-top: 1.5rem;
+  padding: 1rem 1.2rem;
+  background: var(--pale);
+  border: 1px solid var(--mid);
+  border-radius: 12px;
+
+  .check-row { margin: 0; }
+}
+
+.terms-hint {
+  display: block;
+  margin-top: 0.5rem;
+  color: var(--muted);
+  font-size: 0.85rem;
 }

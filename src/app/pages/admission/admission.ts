@@ -1,7 +1,7 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormArray, FormGroup, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { Observable } from 'rxjs';
 import { AdmissionService } from '../../services/admission.service';
 import {
@@ -24,6 +24,7 @@ const STEPS: StepKey[] = ['start', 'personal', 'kin', 'education', 'sponsor', 'c
 export class AdmissionComponent implements OnInit {
   private fb = inject(FormBuilder).nonNullable;
   private api = inject(AdmissionService);
+  private route = inject(ActivatedRoute);
 
   readonly steps = STEPS;
   readonly labels: Record<StepKey, string> = {
@@ -39,7 +40,11 @@ export class AdmissionComponent implements OnInit {
   readonly maritalOptions = ['SINGLE', 'MARRIED', 'DIVORCED', 'WIDOWED'];
   readonly sexOptions = ['MALE', 'FEMALE'];
   readonly qualificationOptions = ['PSLE', 'CSEE', 'ACSEE'];
-  readonly sponsorTypes = ['Government', 'Private company', 'Parent or guardian', 'Organisation', 'Self'];
+  readonly sponsorTypes = [
+    { value: 'government', label: 'Government' },
+    { value: 'private', label: 'Private company' },
+    { value: 'other', label: 'Other (parent, guardian, organisation or self)' },
+  ];
   readonly relationships = ['Parent', 'Sibling', 'Spouse', 'Guardian', 'Other'];
 
   // Forms
@@ -78,6 +83,7 @@ export class AdmissionComponent implements OnInit {
     rows: this.fb.array<FormGroup>([this.newEduRow()]),
   });
 
+  // The terms checkbox is on the Review step, not here
   sponsorForm = this.fb.group({
     sponsorType: ['', Validators.required],
     sponsorFullName: ['', Validators.required],
@@ -86,7 +92,6 @@ export class AdmissionComponent implements OnInit {
     sponsorEmailAddress: ['', [Validators.required, Validators.email]],
     applicantName: ['', Validators.required],
     institutionName: ['', Validators.required],
-    agreeTermsOfDides: [false, Validators.requiredTrue],
   });
 
   // State
@@ -95,8 +100,9 @@ export class AdmissionComponent implements OnInit {
   currentStep = signal<StepKey>('start');
   hasSponsor = signal<boolean | null>(null);
   courses = signal<Course[]>([]);
-  selectedCourseIds = signal<number[]>([]);
+  selectedCourseIds = signal<string[]>([]);
   coursesOpen = signal(false);
+  termsAccepted = signal(false);
   saving = signal(false);
   error = signal<string | null>(null);
   completed = signal(false);
@@ -126,6 +132,13 @@ export class AdmissionComponent implements OnInit {
         this.error.set('Could not load the course list. Check that the backend is running.');
       },
     });
+
+    // Opened from "Continue application" on the status page
+    const email = this.route.snapshot.queryParamMap.get('email');
+    if (email) {
+      this.resumeForm.patchValue({ email });
+      this.resume();
+    }
   }
 
   // Continue a draft
@@ -192,11 +205,11 @@ export class AdmissionComponent implements OnInit {
       });
     }
 
-    // Restore course selections and sponsor state if they exist
-    const picked = (res.selectedCourses ?? []) as Array<{ id?: number; courseId?: number; course_id?: number }>;
+    // Restore course selections as strings so large IDs are not rounded
+    const picked = (res.selectedCourses ?? []) as Array<Record<string, unknown>>;
     const pickedIds = picked
-      .map(c => Number(c.id ?? c.courseId ?? c.course_id))
-      .filter(n => Number.isFinite(n));
+      .map(c => String(c['id'] ?? c['courseId'] ?? c['course_id'] ?? ''))
+      .filter(id => id !== '');
     this.selectedCourseIds.set(pickedIds);
 
     if (res.sponsor) {
@@ -214,13 +227,12 @@ export class AdmissionComponent implements OnInit {
       return this.stepAfter(explicit);
     }
 
-    // Start creates a personal_info row with only name and email,
-    // so the Personal step counts as done only when the key fields are filled.
     const p = res.personalInfo;
     const personalDone = !!(p?.sex && p?.dateOfBirth && p?.homeAddress);
     if (!personalDone) return 'personal';
     if (!res.nextOfKin) return 'kin';
     if (!res.educationBackgrounds?.length) return 'education';
+    // Sponsor is optional: only ask for it if the applicant has not already skipped it
     if (!res.sponsor && this.hasSponsor() !== false) return 'sponsor';
     if (!res.selectedCourses?.length) return 'courses';
     return 'review';
@@ -334,6 +346,7 @@ export class AdmissionComponent implements OnInit {
   }
 
   skipSponsor() {
+    // Nothing is sent to the backend. The applicant simply has no sponsor.
     this.hasSponsor.set(false);
     this.go('courses');
   }
@@ -343,7 +356,10 @@ export class AdmissionComponent implements OnInit {
     const id = this.requireId();
     if (id === null) return;
 
-    this.run(this.api.sponsor(id, this.sponsorForm.getRawValue()), () => this.go('courses'));
+    this.run(this.api.sponsor(id, this.sponsorForm.getRawValue()), () => {
+      this.hasSponsor.set(true);
+      this.go('courses');
+    });
   }
 
   // Course dropdown
@@ -356,11 +372,11 @@ export class AdmissionComponent implements OnInit {
     this.coursesOpen.set(false);
   }
 
-  isSelected(id: number): boolean {
+  isSelected(id: string): boolean {
     return this.selectedCourseIds().includes(id);
   }
 
-  toggleCourse(id: number, checked: boolean) {
+  toggleCourse(id: string, checked: boolean) {
     this.selectedCourseIds.update(ids =>
       checked ? [...new Set([...ids, id])] : ids.filter(x => x !== id),
     );
@@ -380,7 +396,14 @@ export class AdmissionComponent implements OnInit {
     );
   }
 
+  // Review and submit
+
   submit() {
+    if (!this.termsAccepted()) {
+      this.error.set('Please tick the terms and conditions before submitting.');
+      return;
+    }
+
     const id = this.requireId();
     if (id === null) return;
 
@@ -389,7 +412,7 @@ export class AdmissionComponent implements OnInit {
         this.error.set('Some sections are incomplete. Please review each step before submitting.');
         return;
       }
-      this.run(this.api.submit(id), () => this.completed.set(true));
+      this.run(this.api.submit(id, { agreeTermsOfDides: true }), () => this.completed.set(true));
     });
   }
 

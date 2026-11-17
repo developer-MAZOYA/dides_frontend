@@ -1,8 +1,12 @@
-<app-top-bar />
-<app-navbar />
+@if (!isPortal()) {
+  <app-top-bar />
+  <app-navbar />
+}
 
 <main>
   <router-outlet />
 </main>
 
-<app-footer />
+@if (!isPortal()) {
+  <app-footer />
+}

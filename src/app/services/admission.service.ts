@@ -13,15 +13,6 @@ import {
   StartRequest,
 } from '../models/admission.models';
 
-// Course shape as the backend sends it
-interface CourseDto {
-  courseId?: number;
-  course_id?: number;
-  courseName?: string;
-  course_name?: string;
-  active?: boolean;
-}
-
 @Injectable({ providedIn: 'root' })
 export class AdmissionService {
   private http = inject(HttpClient);
@@ -29,18 +20,32 @@ export class AdmissionService {
   private readonly backend = 'http://localhost:9090';
   private readonly api = `${this.backend}/api/admissions`;
 
+  /**
+   * Course IDs can exceed JavaScript's safe integer limit, so the response is
+   * read as text and long IDs are quoted before parsing. Every ID stays a string.
+   */
   getCourses(): Observable<Course[]> {
-    return this.http.get<CourseDto[]>(`${this.backend}/courses/CoursesAll`).pipe(
-      map(list =>
-        list
-          .filter(c => c.active !== false)
-          .map(c => ({
-            id: Number(c.courseId ?? c.course_id),
-            name: c.courseName ?? c.course_name ?? 'Unnamed course',
-          }))
-          .filter(c => Number.isFinite(c.id)),
-      ),
-    );
+    return this.http
+      .get(`${this.backend}/courses/CoursesAll`, { responseType: 'text' })
+      .pipe(
+        map(raw => {
+          // Quote long numeric IDs so JSON.parse keeps every digit
+          const safe = raw.replace(
+            /"(courseId|course_id|id)"\s*:\s*(\d{10,})/g,
+            '"$1":"$2"',
+          );
+
+          const list = JSON.parse(safe) as Array<Record<string, unknown>>;
+
+          return list
+            .filter(c => c['active'] !== false)
+            .map((c): Course => ({
+              id: String(c['courseId'] ?? c['course_id'] ?? c['id'] ?? ''),
+              name: String(c['courseName'] ?? c['course_name'] ?? 'Unnamed course'),
+            }))
+            .filter(c => c.id !== '');
+        }),
+      );
   }
 
   start(body: StartRequest): Observable<AdmissionResponse> {
@@ -77,7 +82,7 @@ export class AdmissionService {
     return this.http.get<boolean>(`${this.api}/${id}/validate`);
   }
 
-  submit(id: number): Observable<AdmissionResponse> {
-    return this.http.post<AdmissionResponse>(`${this.api}/${id}/submit`, null);
+  submit(id: number, body: { agreeTermsOfDides: boolean }): Observable<AdmissionResponse> {
+    return this.http.post<AdmissionResponse>(`${this.api}/${id}/submit`, body);
   }
 }

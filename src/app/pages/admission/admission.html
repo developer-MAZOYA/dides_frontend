@@ -1,21 +1,13 @@
-<section class="page-hero">
-  <div class="hero-inner container">
-    <span class="section-tag">Online Admission</span>
-    <h1>Application for <span>2026/2027</span></h1>
-    <p>Complete each step in order. Your details are saved as you go.</p>
-  </div>
-</section>
-
-<section class="wizard container">
+<section class="wizard">
   @if (completed()) {
     <div class="panel success">
       <div class="check">✓</div>
       <h2>Application submitted</h2>
       <p>
-        Your application number is <strong>{{ admissionId() }}</strong>. Keep it for your records.
-        Use the confirmation code sent to your phone to confirm your admission.
+        Your application number is <strong>{{ applicationNumber() ?? admissionId() }}</strong>.
+        Keep it for your records. Use the confirmation code sent to your phone to confirm your admission.
       </p>
-      <a routerLink="/" class="btn btn-primary">Back to home</a>
+      <a routerLink="/portal" class="btn btn-primary">Back to portal</a>
     </div>
   } @else {
     <ol class="stepper">
@@ -37,6 +29,19 @@
         @case ('start') {
           <h2>Start your application</h2>
           <p class="hint">Enter your name and email. These create your application.</p>
+
+          <div class="resume" [formGroup]="resumeForm">
+            <div class="resume-text">
+              <h3>Continue a draft</h3>
+              <p class="hint">Already started? Enter the email you used to continue where you stopped.</p>
+            </div>
+            <div class="resume-input">
+              <input type="email" formControlName="email" placeholder="you@example.com" />
+              <button type="button" class="btn btn-outline" [disabled]="saving()" (click)="resume()">
+                {{ saving() ? 'Looking…' : 'Continue draft' }}
+              </button>
+            </div>
+          </div>
 
           <div class="grid" [formGroup]="startForm">
             <div class="field" [class.invalid]="bad(startForm, 'firstname')">
@@ -256,7 +261,9 @@
                 <label>Sponsor type *</label>
                 <select formControlName="sponsorType">
                   <option value="" disabled>Select</option>
-                  @for (o of sponsorTypes; track o) { <option [value]="o">{{ o }}</option> }
+                  @for (o of sponsorTypes; track o.value) {
+                    <option [value]="o.value">{{ o.label }}</option>
+                  }
                 </select>
                 @if (bad(sponsorForm, 'sponsorType')) { <small>Required</small> }
               </div>
@@ -290,10 +297,6 @@
                 <input formControlName="institutionName" />
                 @if (bad(sponsorForm, 'institutionName')) { <small>Required</small> }
               </div>
-              <label class="check-row full" [class.invalid]="bad(sponsorForm, 'agreeTermsOfDides')">
-                <input type="checkbox" formControlName="agreeTermsOfDides" />
-                I agree to the terms of DIDES *
-              </label>
             </div>
           }
 
@@ -308,64 +311,65 @@
             }
           </div>
         }
-@case ('courses') {
-  <h2>Select courses</h2>
-  <p class="hint">Open the list and tick the programme(s) you want to apply for.</p>
 
-  <div class="dropdown">
-    <button
-      type="button"
-      class="dropdown-toggle"
-      [class.open]="coursesOpen()"
-      [attr.aria-expanded]="coursesOpen()"
-      (click)="toggleDropdown()"
-    >
-      <span>
-        @if (selectedCourseIds().length === 0) {
-          Select course(s)
-        } @else {
-          {{ selectedCourseIds().length }} course(s) selected
+        @case ('courses') {
+          <h2>Select courses</h2>
+          <p class="hint">Open the list and tick the programme(s) you want to apply for.</p>
+
+          <div class="dropdown">
+            <button
+              type="button"
+              class="dropdown-toggle"
+              [class.open]="coursesOpen()"
+              [attr.aria-expanded]="coursesOpen()"
+              (click)="toggleDropdown()"
+            >
+              <span>
+                @if (selectedCourseIds().length === 0) {
+                  Select course(s)
+                } @else {
+                  {{ selectedCourseIds().length }} course(s) selected
+                }
+              </span>
+              <span class="caret">▾</span>
+            </button>
+
+            @if (coursesOpen()) {
+              <div class="dropdown-backdrop" (click)="closeDropdown()"></div>
+              <ul class="dropdown-menu" role="listbox">
+                @for (c of courses(); track c.id) {
+                  <li>
+                    <label [class.selected]="isSelected(c.id)">
+                      <input
+                        type="checkbox"
+                        [checked]="isSelected(c.id)"
+                        (change)="toggleCourse(c.id, $any($event.target).checked)"
+                      />
+                      <span>{{ c.name }}</span>
+                    </label>
+                  </li>
+                } @empty {
+                  <li class="empty">Loading courses…</li>
+                }
+              </ul>
+            }
+          </div>
+
+          @if (selectedNames().length > 0) {
+            <div class="chips">
+              @for (name of selectedNames(); track $index) {
+                <span class="chip">{{ name }}</span>
+              }
+            </div>
+          }
+
+          <div class="actions">
+            <button class="btn btn-outline" (click)="back()">← Back</button>
+            <button class="btn btn-primary" [disabled]="saving()" (click)="saveCourses()">
+              {{ saving() ? 'Saving…' : 'Save & continue →' }}
+            </button>
+          </div>
         }
-      </span>
-      <span class="caret">▾</span>
-    </button>
-
-    @if (coursesOpen()) {
-      <div class="dropdown-backdrop" (click)="closeDropdown()"></div>
-      <ul class="dropdown-menu" role="listbox">
-        @for (c of courses(); track c.id) {
-          <li>
-            <label [class.selected]="isSelected(c.id)">
-              <input
-                type="checkbox"
-                [checked]="isSelected(c.id)"
-                (change)="toggleCourse(c.id, $any($event.target).checked)"
-              />
-              <span>{{ c.name }}</span>
-            </label>
-          </li>
-        } @empty {
-          <li class="empty">No courses available</li>
-        }
-      </ul>
-    }
-  </div>
-
-  @if (selectedNames().length > 0) {
-    <div class="chips">
-      @for (name of selectedNames(); track $index) {
-        <span class="chip">{{ name }}</span>
-      }
-    </div>
-  }
-
-  <div class="actions">
-    <button class="btn btn-outline" (click)="back()">← Back</button>
-    <button class="btn btn-primary" [disabled]="saving()" (click)="saveCourses()">
-      {{ saving() ? 'Saving…' : 'Save & continue →' }}
-    </button>
-  </div>
-}
 
         @case ('review') {
           <h2>Review and submit</h2>
@@ -373,7 +377,7 @@
 
           <dl class="summary">
             <dt>Application number</dt>
-            <dd>{{ admissionId() }}</dd>
+            <dd>{{ applicationNumber() ?? admissionId() }}</dd>
             <dt>Name</dt>
             <dd>{{ startForm.value.firstname }} {{ startForm.value.lastname }}</dd>
             <dt>Email</dt>
@@ -381,12 +385,30 @@
             <dt>Sponsor</dt>
             <dd>{{ hasSponsor() ? 'Yes' : 'None' }}</dd>
             <dt>Courses selected</dt>
-            <dd>{{ selectedCourseIds().length }}</dd>
+            <dd>{{ selectedNames().length ? selectedNames().join(', ') : 'None' }}</dd>
           </dl>
+
+          <div class="terms">
+            <label class="check-row">
+              <input
+                type="checkbox"
+                [checked]="termsAccepted()"
+                (change)="termsAccepted.set($any($event.target).checked)"
+              />
+              I have read and agree to the terms and conditions of DIDES.
+            </label>
+            @if (!termsAccepted()) {
+              <small class="terms-hint">Tick this box to enable the submit button.</small>
+            }
+          </div>
 
           <div class="actions">
             <button class="btn btn-outline" (click)="back()">← Back</button>
-            <button class="btn btn-gold" [disabled]="saving()" (click)="submit()">
+            <button
+              class="btn btn-gold"
+              [disabled]="saving() || !termsAccepted()"
+              (click)="submit()"
+            >
               {{ saving() ? 'Submitting…' : 'Submit application' }}
             </button>
           </div>
