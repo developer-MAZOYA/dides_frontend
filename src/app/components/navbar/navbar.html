@@ -15,17 +15,109 @@
   </div>
 
   <nav class="main-nav">
-    <button class="menu-toggle" (click)="open.set(!open())" aria-label="Toggle menu">☰</button>
+    <button class="menu-toggle" type="button" (click)="open.set(!open())" aria-label="Toggle menu">
+      <mat-icon aria-hidden="true">menu</mat-icon>
+    </button>
 
-    <ul class="menu-links" [class.open]="open()" (click)="open.set(false)">
-      <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Home</a></li>
-      <li><a routerLink="/about" routerLinkActive="active">About Us</a></li>
-      <li><a href="#">Departments</a></li>
-      <li><a routerLink="/programmes" routerLinkActive="active">Programmes</a></li>
-      <li><a href="#">ICT &amp; Services</a></li>
-      <li><a routerLink="/news" routerLinkActive="active">News</a></li>
-      <li><a routerLink="/contact" routerLinkActive="active">Contact us</a></li>
-      <li><a routerLink="/apply" routerLinkActive="active" class="apply-link">Apply Now</a></li>
+    <ul class="menu-links" [class.open]="open()" (click)="closeAll()">
+      <li>
+        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Home</a>
+      </li>
+      <li>
+        <a routerLink="/about" routerLinkActive="active">About Us</a>
+      </li>
+      <li>
+        <a routerLink="/programmes" routerLinkActive="active">Programmes</a>
+      </li>
+
+      <li class="dropdown">
+        <button
+          type="button"
+          class="dd-toggle"
+          [class.active]="ictOpen()"
+          [attr.aria-expanded]="ictOpen()"
+          (click)="toggleIct($event)"
+        >
+          ICT &amp; Services
+          <mat-icon class="caret" aria-hidden="true">expand_more</mat-icon>
+        </button>
+
+        @if (ictOpen()) {
+          <ul class="dd-menu" role="menu">
+            <li>
+              <a routerLink="/portal/apply" (click)="closeAll()">
+                <span class="ico"><mat-icon aria-hidden="true">edit_document</mat-icon></span>
+                <span>
+                  <strong>Online applications</strong>
+                  <small>Apply for admission</small>
+                </span>
+              </a>
+            </li>
+            <li>
+              <a routerLink="/portal/status" (click)="closeAll()">
+                <span class="ico"><mat-icon aria-hidden="true">manage_search</mat-icon></span>
+                <span>
+                  <strong>Application status</strong>
+                  <small>Check where your application stands</small>
+                </span>
+              </a>
+            </li>
+            <li>
+              <a href="https://dides.ac.tz/dis/results/index" target="_blank" rel="noopener" (click)="closeAll()">
+                <span class="ico"><mat-icon aria-hidden="true">school</mat-icon></span>
+                <span>
+                  <strong>Academic results</strong>
+                  <small>Released results for students</small>
+                </span>
+              </a>
+            </li>
+            <li>
+              <a routerLink="/portal/announcements" (click)="closeAll()">
+                <span class="ico"><mat-icon aria-hidden="true">campaign</mat-icon></span>
+                <span>
+                  <strong>Announcements</strong>
+                  <small>Intakes and notices</small>
+                </span>
+              </a>
+            </li>
+
+            @if (auth.isLoggedIn()) {
+              <li>
+                <a [routerLink]="auth.homePath()" (click)="closeAll()">
+                  <span class="ico"><mat-icon aria-hidden="true">dashboard</mat-icon></span>
+                  <span>
+                    <strong>My dashboard</strong>
+                    <small>Signed in as {{ auth.username() }}</small>
+                  </span>
+                </a>
+              </li>
+            } @else {
+              <li>
+                <a routerLink="/login" (click)="closeAll()">
+                  <span class="ico"><mat-icon aria-hidden="true">login</mat-icon></span>
+                  <span>
+                    <strong>Staff &amp; student login</strong>
+                    <small>Access your dashboard</small>
+                  </span>
+                </a>
+              </li>
+            }
+          </ul>
+        }
+      </li>
+
+      <li>
+        <a routerLink="/news" routerLinkActive="active">News</a>
+      </li>
+      <li>
+        <a routerLink="/contact" routerLinkActive="active">Contact us</a>
+      </li>
+      <li>
+        <a routerLink="/portal/apply" routerLinkActive="active" class="apply-link">Apply Now</a>
+      </li>
+
+    
+      
     </ul>
   </nav>
 </header>

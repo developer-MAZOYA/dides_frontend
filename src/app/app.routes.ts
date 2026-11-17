@@ -1,43 +1,105 @@
 import { Routes } from '@angular/router';
+import { authGuard, dashboardGuard, roleGuard } from './guards/auth.guard';
+import { PublicLayoutComponent } from './layouts/public-layout';
 
 export const routes: Routes = [
+  // ---------- Public website: header, navigation and footer ----------
   {
     path: '',
-    loadComponent: () => import('./pages/home/home').then(m => m.HomeComponent),
-    title: 'DIDES | Home',
+    component: PublicLayoutComponent,
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./pages/home/home').then(m => m.HomeComponent),
+        title: 'DIDES | Home',
+      },
+      {
+        path: 'about',
+        loadComponent: () => import('./pages/about/about').then(m => m.AboutComponent),
+        title: 'About Us | DIDES',
+      },
+      {
+        path: 'programmes',
+        loadComponent: () => import('./pages/programmes/programmes').then(m => m.ProgrammesComponent),
+        title: 'Programmes | DIDES',
+      },
+      {
+        path: 'news',
+        loadComponent: () => import('./pages/news/news').then(m => m.NewsComponent),
+        title: 'News | DIDES',
+      },
+      {
+        path: 'contact',
+        loadComponent: () => import('./pages/contact/contact').then(m => m.ContactComponent),
+        title: 'Contact | DIDES',
+      },
+      {
+        path: 'apply',
+        loadComponent: () => import('./pages/apply/apply').then(m => m.ApplyComponent),
+        title: 'Apply | DIDES',
+      },
+    ],
   },
+
+  // ---------- Sign-in: full screen, no public header or footer ----------
   {
-    path: 'about',
-    loadComponent: () => import('./pages/about/about').then(m => m.AboutComponent),
-    title: 'About Us | DIDES',
+    path: 'login',
+    loadComponent: () => import('./pages/login/login').then(m => m.LoginComponent),
+    title: 'Sign in | DIDES',
   },
+
+  // ---------- Dashboards: their own management shell ----------
   {
-    path: 'programmes',
-    loadComponent: () => import('./pages/programmes/programmes').then(m => m.ProgrammesComponent),
-    title: 'Programmes | DIDES',
-  },
-  {
-    path: 'news',
-    loadComponent: () => import('./pages/news/news').then(m => m.NewsComponent),
-    title: 'News | DIDES',
-  },
-  {
-    path: 'contact',
-    loadComponent: () => import('./pages/contact/contact').then(m => m.ContactComponent),
-    title: 'Contact | DIDES',
-  },
-  {
-    path: 'apply',
-    loadComponent: () => import('./pages/apply/apply').then(m => m.ApplyComponent),
-    title: 'Apply | DIDES',
-  },
+  path: 'dashboard',
+  loadComponent: () =>
+    import('./pages/dashboard/dashboard-shell').then(m => m.DashboardShellComponent),
+  canActivate: [authGuard],
+  children: [
+    { path: '', pathMatch: 'full', canActivate: [dashboardGuard], children: [] },
+    {
+      path: 'student',
+      canActivate: [roleGuard],
+      data: { roles: ['STUDENT'] },
+      loadComponent: () =>
+        import('./pages/dashboard/student-dashboard').then(m => m.StudentDashboardComponent),
+      title: 'My account | DIDES',
+    },
+    {
+      path: 'admin',
+      canActivate: [roleGuard],
+      data: { roles: ['ADMIN'] },
+      loadComponent: () =>
+        import('./pages/dashboard/staff-dashboard').then(m => m.StaffDashboardComponent),
+      title: 'Admin dashboard | DIDES',
+    },
+    {
+      path: 'director',
+      canActivate: [roleGuard],
+      data: { roles: ['DIRECTOR'] },
+      loadComponent: () =>
+        import('./pages/dashboard/staff-dashboard').then(m => m.StaffDashboardComponent),
+      title: 'Director dashboard | DIDES',
+    },
+    {
+      path: 'admissions',
+      canActivate: [roleGuard],
+      data: { roles: ['ADMIN', 'DIRECTOR'] },
+      loadComponent: () =>
+        import('./pages/dashboard/admissions-list').then(m => m.AdmissionsListComponent),
+      title: 'All admissions | DIDES',
+    },
+  ],
+},
+
+  // ---------- Admissions portal: its own shell ----------
   {
     path: 'portal',
     loadComponent: () => import('./pages/portal/portal-shell').then(m => m.PortalShellComponent),
     children: [
       {
         path: '',
-        loadComponent: () => import('./pages/portal/portal-dashboard').then(m => m.PortalDashboardComponent),
+        loadComponent: () =>
+          import('./pages/portal/portal-dashboard').then(m => m.PortalDashboardComponent),
         title: 'Admissions Portal | DIDES',
       },
       {
@@ -47,12 +109,14 @@ export const routes: Routes = [
       },
       {
         path: 'status',
-        loadComponent: () => import('./pages/portal/portal-status').then(m => m.PortalStatusComponent),
+        loadComponent: () =>
+          import('./pages/portal/portal-status').then(m => m.PortalStatusComponent),
         title: 'Check Status | DIDES',
       },
       {
         path: 'announcements',
-        loadComponent: () => import('./pages/portal/portal-announcements').then(m => m.PortalAnnouncementsComponent),
+        loadComponent: () =>
+          import('./pages/portal/portal-announcements').then(m => m.PortalAnnouncementsComponent),
         title: 'Announcements | DIDES',
       },
       {
@@ -62,6 +126,7 @@ export const routes: Routes = [
       },
     ],
   },
+
   { path: 'admission', redirectTo: 'portal/apply', pathMatch: 'full' },
   { path: '**', redirectTo: '' },
 ];

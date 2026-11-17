@@ -81,7 +81,16 @@ export class AdmissionService {
   validate(id: number): Observable<boolean> {
     return this.http.get<boolean>(`${this.api}/${id}/validate`);
   }
-
+/** GET /api/admissions. Returns every application. Large IDs are kept as strings. */
+listAll(): Observable<AdmissionSummary[]> {
+  return this.http.get(`${this.api}`, { responseType: 'text' }).pipe(
+    map(raw => {
+      // Quote any ID-like number with 10+ digits so JSON.parse keeps every digit
+      const safe = raw.replace(/"(\w*[iI]d|\w*Id)"\s*:\s*(\d{10,})/g, '"$1":"$2"');
+      return JSON.parse(safe) as AdmissionSummary[];
+    }),
+  );
+}
   submit(id: number, body: { agreeTermsOfDides: boolean }): Observable<AdmissionResponse> {
     return this.http.post<AdmissionResponse>(`${this.api}/${id}/submit`, body);
   }
