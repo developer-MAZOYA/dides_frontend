@@ -345,24 +345,39 @@ export class AdmissionComponent implements OnInit {
     this.run(this.api.education(id, rows), () => this.go('sponsor'));
   }
 
-  skipSponsor() {
-    // Nothing is sent to the backend. The applicant simply has no sponsor.
+ saveSponsor() {
+  if (!this.valid(this.sponsorForm)) return;
+  const id = this.requireId();
+  if (id === null) return;
+
+  const raw = this.sponsorForm.getRawValue();
+  const body = {
+    hasSponsor: true as const,
+    sponsor: {
+      sponsorType: raw.sponsorType,
+      sponsorFullName: raw.sponsorFullName,
+      sponsorPostalAddress: raw.sponsorPostalAddress,
+      sponsorMobileNumber: raw.sponsorMobileNumber,
+      sponsorEmailAddress: raw.sponsorEmailAddress,
+      applicantName: raw.applicantName,
+      institutionName: raw.institutionName,
+    },
+  };
+
+  this.run(this.api.sponsor(id, body), () => {
+    this.hasSponsor.set(true);
+    this.go('courses');
+  });
+}
+
+skipSponsor() {
+  const id = this.requireId();
+  if (id === null) return;
+  this.run(this.api.sponsor(id, { hasSponsor: false, sponsor: null }), () => {
     this.hasSponsor.set(false);
     this.go('courses');
-  }
-
-  saveSponsor() {
-    if (!this.valid(this.sponsorForm)) return;
-    const id = this.requireId();
-    if (id === null) return;
-
-    this.run(this.api.sponsor(id, this.sponsorForm.getRawValue()), () => {
-      this.hasSponsor.set(true);
-      this.go('courses');
-    });
-  }
-
-  // Course dropdown
+  });
+}
 
   toggleDropdown() {
     this.coursesOpen.update(open => !open);

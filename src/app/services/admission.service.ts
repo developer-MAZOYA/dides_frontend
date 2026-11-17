@@ -13,6 +13,11 @@ import {
   StartRequest,
 } from '../models/admission.models';
 
+/** Body sent to PUT /api/admissions/{id}/sponsor */
+export type SponsorStep =
+  | { hasSponsor: true; sponsor: Sponsor }
+  | { hasSponsor: false; sponsor: null };
+
 @Injectable({ providedIn: 'root' })
 export class AdmissionService {
   private http = inject(HttpClient);
@@ -20,28 +25,21 @@ export class AdmissionService {
   private readonly backend = 'http://localhost:9090';
   private readonly api = `${this.backend}/api/admissions`;
 
-  /**
-   * Course IDs can exceed JavaScript's safe integer limit, so the response is
-   * read as text and long IDs are quoted before parsing. Every ID stays a string.
-   */
   getCourses(): Observable<Course[]> {
     return this.http
       .get(`${this.backend}/courses/CoursesAll`, { responseType: 'text' })
       .pipe(
         map(raw => {
-          // Quote long numeric IDs so JSON.parse keeps every digit
           const safe = raw.replace(
             /"(courseId|course_id|id)"\s*:\s*(\d{10,})/g,
             '"$1":"$2"',
           );
-
           const list = JSON.parse(safe) as Array<Record<string, unknown>>;
-
           return list
             .filter(c => c['active'] !== false)
             .map((c): Course => ({
               id: String(c['courseId'] ?? c['course_id'] ?? c['id'] ?? ''),
-              name: String(c['courseName'] ?? c['course_name'] ?? 'Unnamed course'),
+              name: String(c['courseName'] ?? c['course_name'] ?? c['name'] ?? 'Unnamed course'),
             }))
             .filter(c => c.id !== '');
         }),
@@ -70,7 +68,8 @@ export class AdmissionService {
     return this.http.put<AdmissionResponse>(`${this.api}/${id}/education`, body);
   }
 
-  sponsor(id: number, body: Sponsor): Observable<AdmissionResponse> {
+  // ✅ NEW SHAPE
+  sponsor(id: number, body: SponsorStep): Observable<AdmissionResponse> {
     return this.http.put<AdmissionResponse>(`${this.api}/${id}/sponsor`, body);
   }
 
@@ -81,17 +80,37 @@ export class AdmissionService {
   validate(id: number): Observable<boolean> {
     return this.http.get<boolean>(`${this.api}/${id}/validate`);
   }
-/** GET /api/admissions. Returns every application. Large IDs are kept as strings. */
-listAll(): Observable<AdmissionSummary[]> {
-  return this.http.get(`${this.api}`, { responseType: 'text' }).pipe(
-    map(raw => {
-      // Quote any ID-like number with 10+ digits so JSON.parse keeps every digit
-      const safe = raw.replace(/"(\w*[iI]d|\w*Id)"\s*:\s*(\d{10,})/g, '"$1":"$2"');
-      return JSON.parse(safe) as AdmissionSummary[];
-    }),
-  );
-}
+
+  listAll(): Observable<AdmissionSummary[]> {
+    return this.http.get(`${this.api}`, { responseType: 'text' }).pipe(
+      map(raw => {
+        const safe = raw.replace(/"(\w*[iI]d|\w*Id)"\s*:\s*(\d{10,})/g, '"$1":"$2"');
+        return JSON.parse(safe) as AdmissionSummary[];
+      }),
+    );
+  }
+
   submit(id: number, body: { agreeTermsOfDides: boolean }): Observable<AdmissionResponse> {
     return this.http.post<AdmissionResponse>(`${this.api}/${id}/submit`, body);
+  }
+
+  // ---------------- STAFF DECISION ----------------
+
+  approve(id: number, reason?: string): Observable<AdmissionResponse> {
+    return this.http.put<AdmissionResponse>(`${this.api}/${id}/approve`, {
+      reason: reason ?? null,
+    });
+  }
+
+  reject(id: number, reason: string): Observable<AdmissionResponse> {
+    return this.http.put<AdmissionResponse>(`${this.api}/${id}/reject`, { reason });
+  }
+
+  // ---------------- APPLICANT CONFIRMATION ----------------
+
+  confirm(id: number, confirmationCode: string): Observable<AdmissionResponse> {
+    return this.http.post<AdmissionResponse>(`${this.api}/${id}/confirm`, {
+      confirmationCode,
+    });
   }
 }

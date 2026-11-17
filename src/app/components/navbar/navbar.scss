@@ -281,3 +281,27 @@
   width: 28px;
   height: 28px;
 }
+.login-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border: 1px solid #006838;
+  border-radius: 6px;
+  color: #006838;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  
+}
+
+.login-link mat-icon {
+  font-size: 24px;
+  width: 25px;
+  height: 25px;
+}
+
+.login-link:hover {
+  background: #006838;
+  color: #fff;
+}

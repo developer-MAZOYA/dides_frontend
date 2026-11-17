@@ -3,7 +3,6 @@ import { Session } from '../models/auth.models';
 
 const KEY = 'dides.session';
 
-/** If a user somehow has several roles, the most senior one decides the dashboard. */
 const PRIORITY = ['ADMIN', 'DIRECTOR', 'ADMISSIONUSER', 'STAFF', 'STUDENT'];
 
 export function normaliseRoles(roles: string[] | null | undefined): string[] {
@@ -14,15 +13,15 @@ export function primaryRole(roles: string[]): string {
   return PRIORITY.find(p => roles.includes(p)) ?? roles[0] ?? '';
 }
 
-/** Returns the dashboard a role should land on. */
 export function homePathFor(role: string): string {
-  switch (role) {
+  switch (role?.toUpperCase()) {
     case 'STUDENT':
       return '/dashboard/student';
     case 'ADMIN':
-      return '/dashboard/admin';
     case 'DIRECTOR':
-      return '/dashboard/director';
+    case 'ADMISSIONUSER':
+    case 'STAFF':
+      return '/dashboard/users'; 
     default:
       return '/portal';
   }

@@ -33,17 +33,29 @@ export class UsersService {
     );
   }
 
-  /** GET /get-user/{id}. Requires ADMIN, DIRECTOR, or the user themselves. */
+  /** GET /get-user/{id}. Requires USER_READ or being the user themselves. */
   getById(id: string): Observable<AppUser> {
     return this.http.get(`${BACKEND}/get-user/${id}`, { responseType: 'text' }).pipe(
       map(raw => normalise(parseSafe(raw) as Record<string, unknown>)),
     );
   }
 
-  /** PUT /update-user/{id}. Requires USER_UPDATE. The ID goes in the URL, not the body. */
+  /** POST /admin/users. Creates a user with a specific role. Requires USER_CREATE. */
+  create(data: any): Observable<AppUser> {
+    return this.http.post(`${BACKEND}/admin/users`, data, { responseType: 'text' }).pipe(
+      map(raw => normalise(parseSafe(raw) as Record<string, unknown>))
+    );
+  }
+
+  /** PUT /update-user/{id}. Requires USER_UPDATE. */
   update(id: string, user: AppUser): Observable<AppUser> {
     const fields: Record<string, unknown> = { ...user };
     delete fields['id'];
+    
+    // If password is empty in the form, remove it so the backend doesn't overwrite it with blank
+    if (!fields['password']) {
+      delete fields['password'];
+    }
 
     return this.http.put(`${BACKEND}/update-user/${id}`, fields, { responseType: 'text' }).pipe(
       map(raw => normalise(parseSafe(raw) as Record<string, unknown>)),
@@ -51,9 +63,13 @@ export class UsersService {
   }
 
   /** PUT /admin/users/{id}/role. Requires ROLE_MANAGE. */
-  updateRole(id: string, role: string): Observable<unknown> {
-    return this.http.put(`${BACKEND}/admin/users/${id}/role`, { role }, { responseType: 'text' }).pipe(
-      map(raw => parseSafe(raw)),
+  updateRole(id: number | string, role: string): Observable<AppUser> {
+    return this.http.put(
+      `${BACKEND}/admin/users/${id}/role`,
+      { role },
+      { responseType: 'text' },
+    ).pipe(
+      map(raw => normalise(parseSafe(raw) as Record<string, unknown>)),
     );
   }
 }

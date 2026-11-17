@@ -50,6 +50,7 @@ export interface Sponsor {
   applicantName: string;
   institutionName: string;
 }
+
 export interface Course {
   id: string;
   name: string;
@@ -58,6 +59,7 @@ export interface Course {
 export interface CourseSelection {
   selectedCourseIds: string[];
 }
+
 export interface DraftPersonalInfo {
   id?: number;
   firstname?: string;
@@ -85,5 +87,14 @@ export interface AdmissionSummary {
   educationBackgrounds?: unknown[] | null;
   sponsor?: unknown;
   selectedCourses?: unknown[] | null;
-  [key: string]: unknown;
+
+  hasSponsor?: boolean;
+  agreeTermsOfDides?: boolean;
+
+  decisionAt?: string | null;
+  decisionBy?: string | null;
+  decisionReason?: string | null;
+  confirmedAt?: string | null;
+  confirmationCode?: string | null;
+
 }

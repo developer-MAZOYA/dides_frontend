@@ -8,8 +8,13 @@
     </div>
 
     <div class="lang">
-      <button [class.active]="lang() === 'en'" (click)="lang.set('en')">EN</button>
-      <button [class.active]="lang() === 'sw'" (click)="lang.set('sw')">SW</button>
-    </div>
+  <button [class.active]="lang() === 'en'" (click)="lang.set('en')">
+    🇬🇧 EN
+  </button>
+
+  <button [class.active]="lang() === 'sw'" (click)="lang.set('sw')">
+    🇹🇿 SW
+  </button>
+</div>
   </div>
 </div>

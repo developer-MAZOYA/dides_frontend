@@ -14,7 +14,6 @@ interface ApplyStep {
 })
 export class ApplyComponent {
   readonly applyUrl = '/admission';
-  //readonly portalLoginUrl = 'https://dides.ac.tz/apply/login?login=active';
   readonly intake = 'September Intake 2026/2027';
 
   steps: ApplyStep[] = [

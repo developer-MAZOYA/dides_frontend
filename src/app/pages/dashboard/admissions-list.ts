@@ -1,357 +1,288 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { HttpErrorResponse } from '@angular/common/http';
-import { DatePipe } from '@angular/common';
+import { DatePipe, NgClass } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { AdmissionService } from '../../services/admission.service';
-import { AdmissionSummary } from '../../models/admission.models';
-
-type StatusFilter = 'ALL' | 'DRAFT' | 'SUBMITTED';
+import { AuthService } from '../../services/auth.service';
+import { MatIconModule } from '@angular/material/icon';
 
 interface AdmissionRow {
   id: string;
   appNo: string;
   name: string;
   email: string;
-  step: string;
-  status: 'DRAFT' | 'SUBMITTED';
+  status: 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED' | 'CONFIRMED';
   submittedAt: string | null;
-  courses: string[];
-  hasSponsor: boolean;
-  personal: AdmissionSummary['personalInfo'];
+  decisionReason: string | null;
 }
 
 @Component({
   selector: 'app-admissions-list',
-  imports: [DatePipe],
+  imports: [DatePipe, FormsModule, NgClass, MatIconModule],
   template: `
-    <section class="adm">
-      <header class="dash-head">
-        <div>
-          <span class="section-tag">Admissions</span>
-          <h1>All applications</h1>
-          <p class="dash-sub">Every application in the system, newest first.</p>
-        </div>
-        <div class="dash-actions">
-          <button class="btn btn-outline" type="button" [disabled]="loading()" (click)="load()">Refresh</button>
-        </div>
-      </header>
+    <div class="dashboard-header">
+      <div>
+        <h1>Admissions</h1>
+        <p class="text-muted">Manage student applications and decisions.</p>
+      </div>
+      <button class="btn-primary" (click)="load()" [disabled]="loading()">Refresh</button>
+    </div>
 
-      <div class="dash-stats">
-        <div class="dash-stat"><span>{{ total() }}</span><small>Total</small></div>
-        <div class="dash-stat"><span>{{ submittedCount() }}</span><small>Submitted</small></div>
-        <div class="dash-stat"><span>{{ draftCount() }}</span><small>Drafts</small></div>
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon purple"><mat-icon>groups</mat-icon></div>
+        <div class="kpi-data"><span class="kpi-value">{{ total() }}</span><span class="kpi-label">Total</span></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon gold"><mat-icon>pending_actions</mat-icon></div>
+        <div class="kpi-data"><span class="kpi-value">{{ count('SUBMITTED') }}</span><span class="kpi-label">Awaiting</span></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon green"><mat-icon>check_circle</mat-icon></div>
+        <div class="kpi-data"><span class="kpi-value">{{ count('APPROVED') }}</span><span class="kpi-label">Approved</span></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon red"><mat-icon>cancel</mat-icon></div>
+        <div class="kpi-data"><span class="kpi-value">{{ count('REJECTED') }}</span><span class="kpi-label">Rejected</span></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <h2>All Applications</h2>
+        <input class="search-input" type="search" placeholder="Search..." (input)="query.set($any($event.target).value)" />
       </div>
 
-      <div class="toolbar">
-        <input
-          class="dash-input search"
-          type="search"
-          placeholder="Search application number, name or email…"
-          (input)="query.set(readValue($event))"
-        />
-        <div class="seg" role="group" aria-label="Filter by status">
-          @for (f of filters; track f.value) {
-            <button
-              type="button"
-              [class.on]="statusFilter() === f.value"
-              (click)="statusFilter.set(f.value)"
-            >
-              {{ f.label }}
-            </button>
-          }
-        </div>
-      </div>
+      @if (error()) { <div class="alert">{{ error() }}</div> }
 
-      @if (error()) {
-        <div class="dash-alert">{{ error() }}</div>
-      }
-
-      <div class="layout">
-        <div class="dash-card table-card">
-          @if (loading()) {
-            <p class="dash-muted">Loading applications…</p>
-          } @else if (filtered().length === 0) {
-            <p class="dash-muted">No applications match.</p>
-          } @else {
-            <div class="table-scroll">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Application</th>
-                    <th>Applicant</th>
-                    <th>Step</th>
-                    <th>Status</th>
-                    <th>Submitted</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (r of filtered(); track r.id) {
-                    <tr [class.active]="selected()?.id === r.id" (click)="selected.set(r)">
-                      <td><strong>{{ r.appNo }}</strong></td>
-                      <td>
-                        <span class="name">{{ r.name }}</span>
-                        <small class="email">{{ r.email }}</small>
-                      </td>
-                      <td>{{ r.step }}</td>
-                      <td>
-                        <span class="dash-role" [class.submitted]="r.status === 'SUBMITTED'">
-                          {{ r.status === 'SUBMITTED' ? 'Submitted' : 'Draft' }}
-                        </span>
-                      </td>
-                      <td>
-                        @if (r.submittedAt) {
-                          {{ r.submittedAt | date: 'd MMM yyyy' }}
-                        } @else {
-                          —
-                        }
-                      </td>
-                    </tr>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Applicant</th>
+              <th>App No.</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of filtered(); track r.id) {
+              <tr [class.active-row]="selected()?.id === r.id" (click)="select(r)">
+                <td>
+                  <div class="applicant-cell">
+                    <div class="avatar-small">{{ r.name.charAt(0) }}</div>
+                    <div><strong>{{ r.name }}</strong><small>{{ r.email }}</small></div>
+                  </div>
+                </td>
+                <td>{{ r.appNo }}</td>
+                <td><span class="status-pill" [ngClass]="r.status.toLowerCase()">{{ r.status }}</span></td>
+                <td>{{ r.submittedAt | date:'mediumDate' }}</td>
+                <td>
+                  @if (r.status === 'SUBMITTED' && canApprove()) {
+                    <span class="action-hint">Click to review</span>
+                  } @else {
+                    <span class="action-hint">View Details</span>
                   }
-                </tbody>
-              </table>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- DECISION PANEL (Only shows when a row is selected) -->
+    @if (selected(); as r) {
+      <div class="panel decision-panel">
+        <div class="panel-header">
+          <h2>Review Application: {{ r.appNo }}</h2>
+          <button class="btn-close" (click)="selected.set(null)">✕</button>
+        </div>
+        <div class="decision-content">
+          <p><strong>Applicant:</strong> {{ r.name }} ({{ r.email }})</p>
+          
+          @if (r.status === 'SUBMITTED' && canApprove()) {
+            <div class="decision-box">
+              <label>Decision Reason (Required for Reject)</label>
+              <textarea class="input-full" [(ngModel)]="decisionReason" rows="3" placeholder="Enter reason..."></textarea>
+              <div class="decision-actions">
+                <button class="btn-approve" [disabled]="saving()" (click)="approve(r)">Approve Admission</button>
+                <button class="btn-reject" [disabled]="saving()" (click)="reject(r)">Reject Admission</button>
+              </div>
+            </div>
+          } @else if (r.status !== 'SUBMITTED') {
+            <div class="alert-info">
+              This application is already <strong>{{ r.status }}</strong>.
+              @if (r.decisionReason) { <br>Reason: {{ r.decisionReason }} }
+            </div>
+          } @else {
+            <div class="alert-info">
+              You do not have permission to approve/reject this application.
             </div>
           }
         </div>
-
-        <aside class="dash-card detail">
-          @if (selected(); as r) {
-            <h2>{{ r.appNo }}</h2>
-            <span class="dash-role" [class.submitted]="r.status === 'SUBMITTED'">
-              {{ r.status === 'SUBMITTED' ? 'Submitted' : 'Draft' }}
-            </span>
-
-            <dl class="dash-facts">
-              <dt>Name</dt>
-              <dd>{{ r.name }}</dd>
-              <dt>Email</dt>
-              <dd>{{ r.email }}</dd>
-              <dt>Mobile</dt>
-              <dd>{{ r.personal?.mobileNumber || '—' }}</dd>
-              <dt>Date of birth</dt>
-              <dd>{{ r.personal?.dateOfBirth?.slice(0, 10) || '—' }}</dd>
-              <dt>Sex</dt>
-              <dd>{{ r.personal?.sex || '—' }}</dd>
-              <dt>Citizenship</dt>
-              <dd>{{ r.personal?.citizenship || '—' }}</dd>
-              <dt>Address</dt>
-              <dd>{{ r.personal?.homeAddress || '—' }}</dd>
-              <dt>Sponsor</dt>
-              <dd>{{ r.hasSponsor ? 'Yes' : 'None' }}</dd>
-              <dt>Courses</dt>
-              <dd>{{ r.courses.length ? r.courses.join(', ') : 'None' }}</dd>
-            </dl>
-          } @else {
-            <p class="dash-muted">Select an application to see its details.</p>
-          }
-        </aside>
       </div>
-    </section>
+    }
   `,
   styles: [`
-    .toolbar {
-      display: flex;
-      gap: 0.8rem;
-      flex-wrap: wrap;
-      align-items: center;
-      margin-bottom: 1rem;
+    .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+    h1 { color: var(--navy); font-size: 1.8rem; margin: 0; }
+    .text-muted { color: var(--muted); font-size: 0.9rem; margin: 0.2rem 0 0; }
 
-      .search {
-        flex: 1;
-        min-width: 260px;
-        margin-bottom: 0;
-      }
-    }
+    /* KPI Grid */
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+    .kpi-card { background: white; border-radius: 12px; padding: 1.5rem; display: flex; align-items: center; gap: 1.2rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+    .kpi-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+    .kpi-icon.purple { background: rgba(107, 33, 168, 0.1); color: var(--purple); }
+    .kpi-icon.gold { background: rgba(212, 175, 55, 0.1); color: var(--gold); }
+    .kpi-icon.green { background: rgba(22, 101, 52, 0.1); color: #166534; }
+    .kpi-icon.red { background: rgba(155, 28, 28, 0.1); color: #9b1c1c; }
+    .kpi-data { display: flex; flex-direction: column; }
+    .kpi-value { font-size: 1.6rem; font-weight: 700; color: var(--navy); line-height: 1; }
+    .kpi-label { font-size: 0.8rem; color: var(--muted); font-weight: 500; margin-top: 0.3rem; text-transform: uppercase; }
 
-    .seg {
-      display: inline-flex;
-      background: #fff;
-      border: 1px solid var(--mid);
-      border-radius: 999px;
-      overflow: hidden;
+    /* Panel & Table */
+    .panel { background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); overflow: hidden; margin-bottom: 1.5rem; }
+    .panel-header { padding: 1.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; }
+    .panel-header h2 { margin: 0; font-size: 1.1rem; color: var(--navy); }
+    .search-input { padding: 0.6rem 1rem; border: 1px solid #e2e8f0; border-radius: 8px; width: 250px; outline: none; }
 
-      button {
-        border: 0;
-        background: transparent;
-        padding: 0.55rem 1rem;
-        font: inherit;
-        font-weight: 600;
-        color: var(--navy);
-        cursor: pointer;
+    .table-responsive { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th { padding: 1rem 1.5rem; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--muted); background: var(--pale); }
+    td { padding: 1rem 1.5rem; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; color: var(--navy); }
+    tr { cursor: pointer; transition: background 0.2s; }
+    tr:hover { background: #f8fafc; }
+    .active-row { background: #f0fdf4 !important; }
 
-        &.on {
-          background: var(--purple);
-          color: #fff;
-        }
-      }
-    }
+    .applicant-cell { display: flex; align-items: center; gap: 1rem; }
+    .avatar-small { width: 36px; height: 36px; border-radius: 50%; background: var(--purple); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+    .applicant-cell strong { display: block; }
+    .applicant-cell small { color: var(--muted); font-size: 0.8rem; }
 
-    .layout {
-      display: grid;
-      grid-template-columns: 1.6fr 1fr;
-      gap: 1.25rem;
-      align-items: start;
-    }
+    /* Status Pills */
+    .status-pill { padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+    .status-pill.draft { background: #e2e8f0; color: #475569; }
+    .status-pill.submitted { background: #e0e7ff; color: #3730a3; }
+    .status-pill.approved { background: #dcfce7; color: #166534; }
+    .status-pill.rejected { background: #fee2e2; color: #991b1b; }
+    .status-pill.confirmed { background: var(--gold); color: var(--navy); }
 
-    .table-scroll {
-      overflow-x: auto;
-    }
+    /* Decision Panel */
+    .decision-panel { border: 2px solid var(--purple); }
+    .btn-close { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--muted); }
+    .decision-content { padding: 1.5rem; }
+    .decision-box { margin-top: 1rem; background: var(--pale); padding: 1.5rem; border-radius: 8px; }
+    .input-full { width: 100%; padding: 0.8rem; border: 1px solid #cbd5e1; border-radius: 6px; margin: 0.5rem 0 1rem; font-family: inherit; box-sizing: border-box; }
+    
+    .decision-actions { display: flex; gap: 1rem; }
+    .btn-approve { background: #166534; color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 6px; font-weight: 600; cursor: pointer; }
+    .btn-reject { background: #991b1b; color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 6px; font-weight: 600; cursor: pointer; }
+    .btn-approve:hover { background: #14532d; } .btn-reject:hover { background: #7f1d1d; }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.92rem;
-
-      th {
-        text-align: left;
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: var(--muted);
-        padding: 0.6rem 0.7rem;
-        border-bottom: 1px solid #e3eef6;
-      }
-
-      td {
-        padding: 0.75rem 0.7rem;
-        border-bottom: 1px solid #f0f6fa;
-        color: var(--text);
-        vertical-align: top;
-      }
-
-      tbody tr {
-        cursor: pointer;
-        transition: background 0.15s;
-
-        &:hover {
-          background: var(--pale);
-        }
-
-        &.active {
-          background: #fbf1fd;
-        }
-      }
-    }
-
-    .name {
-      display: block;
-      color: var(--navy);
-      font-weight: 600;
-    }
-
-    .email {
-      color: var(--muted);
-    }
-
-    .dash-role.submitted {
-      background: var(--deep);
-      color: #fff;
-    }
-
-    .detail h2 {
-      margin-top: 0;
-      color: var(--purple);
-      word-break: break-word;
-    }
-
-    .detail .dash-role {
-      display: inline-block;
-      margin-bottom: 1rem;
-    }
-
-    @media (max-width: 900px) {
-      .layout {
-        grid-template-columns: 1fr;
-      }
-    }
-  `],
+    .alert { background: #fee2e2; color: #991b1b; padding: 1rem; margin: 1rem 1.5rem; border-radius: 6px; }
+    .alert-info { background: #e0f2fe; color: #0369a1; padding: 1rem; border-radius: 6px; }
+    .btn-primary { background: var(--purple); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; }
+  `]
 })
 export class AdmissionsListComponent implements OnInit {
   private api = inject(AdmissionService);
+  readonly auth = inject(AuthService);
 
-  readonly filters: { value: StatusFilter; label: string }[] = [
-    { value: 'ALL', label: 'All' },
-    { value: 'DRAFT', label: 'Drafts' },
-    { value: 'SUBMITTED', label: 'Submitted' },
-  ];
+  // User Operations Permission Check
+  readonly canApprove = computed(() => this.auth.can('ADMISSION_APPROVE'));
 
   rows = signal<AdmissionRow[]>([]);
   loading = signal(true);
   error = signal<string | null>(null);
   query = signal('');
-  statusFilter = signal<StatusFilter>('ALL');
+  
   selected = signal<AdmissionRow | null>(null);
+  saving = signal(false);
+  decisionReason = '';
 
   total = computed(() => this.rows().length);
-  submittedCount = computed(() => this.rows().filter(r => r.status === 'SUBMITTED').length);
-  draftCount = computed(() => this.total() - this.submittedCount());
 
   filtered = computed(() => {
     const q = this.query().trim().toLowerCase();
-    const status = this.statusFilter();
-
-    return this.rows().filter(r => {
-      if (status !== 'ALL' && r.status !== status) return false;
-      if (!q) return true;
-      return [r.appNo, r.name, r.email].some(v => v.toLowerCase().includes(q));
-    });
+    return this.rows().filter(r => 
+      !q || [r.appNo, r.name, r.email].some(v => (v ?? '').toLowerCase().includes(q))
+    );
   });
 
-  ngOnInit() {
-    this.load();
-  }
+  ngOnInit() { this.load(); }
 
   load() {
     this.loading.set(true);
-    this.error.set(null);
-
     this.api.listAll().subscribe({
-      next: list => {
-        const rows = list.map(a => this.toRow(a)).sort((x, y) => this.compareIdsDesc(x.id, y.id));
-        this.rows.set(rows);
+      next: (res) => {
+        this.rows.set(res.map((a: any) => {
+          let status = String(a.status ?? 'DRAFT').toUpperCase() as AdmissionRow['status'];
+          if (a.submittedAt && status === 'DRAFT') status = 'SUBMITTED';
+          
+          return {
+            id: String(a.admissionId),
+            appNo: a.applicationNumber ?? '—',
+            name: [a.personalInfo?.firstname, a.personalInfo?.lastname].filter(Boolean).join(' ') || 'Unknown',
+            email: a.personalInfo?.email ?? '—',
+            status: status,
+            submittedAt: a.submittedAt,
+            decisionReason: a.decisionReason
+          };
+        }));
         this.loading.set(false);
-
-        // Keep the open detail panel in step with the refreshed data
-        const current = this.selected();
-        this.selected.set(current ? rows.find(r => r.id === current.id) ?? null : null);
       },
-      error: (err: HttpErrorResponse) => {
+      error: () => {
+        this.error.set('Failed to load admissions.');
         this.loading.set(false);
-        this.error.set(
-          err.status === 0
-            ? 'Cannot reach the server. Check that the backend is running on port 9090.'
-            : `Could not load applications (status ${err.status}).`,
-        );
-      },
+      }
     });
   }
 
-  readValue(event: Event): string {
-    return (event.target as HTMLInputElement).value;
+  select(r: AdmissionRow) {
+    this.selected.set(r);
+    this.decisionReason = r.decisionReason ?? '';
+    this.error.set(null);
   }
 
-  private toRow(a: AdmissionSummary): AdmissionRow {
-    const p = a.personalInfo;
-    const submitted = !!a.submittedAt || String(a.status ?? '').toUpperCase().includes('SUBMIT');
-    const raw = (a.selectedCourses ?? []) as Array<Record<string, unknown>>;
-    const name = [p?.firstname, p?.lastname].filter(Boolean).join(' ');
-
-    return {
-      id: String(a.admissionId ?? (a as Record<string, unknown>)['id'] ?? ''),
-      appNo: a.applicationNumber ?? '—',
-      name: name || '—',
-      email: p?.email ?? '—',
-      step: a.currentStep ?? a.current_step ?? '—',
-      status: submitted ? 'SUBMITTED' : 'DRAFT',
-      submittedAt: a.submittedAt ?? null,
-      courses: raw
-        .map(c => String(c['courseName'] ?? c['course_name'] ?? c['name'] ?? ''))
-        .filter(Boolean),
-      hasSponsor: !!a.sponsor,
-      personal: p ?? null,
-    };
+  count(status: string): number {
+    return this.rows().filter(r => r.status === status).length;
   }
 
-  /** Compares numeric strings without losing precision for large IDs. */
-  private compareIdsDesc(a: string, b: string): number {
-    return b.length - a.length || b.localeCompare(a);
+  approve(r: AdmissionRow) {
+    if (!confirm('Are you sure you want to approve this application?')) return;
+    this.saving.set(true);
+    this.api.approve(Number(r.id), this.decisionReason).subscribe({
+      next: () => {
+        this.saving.set(false);
+        this.selected.set(null);
+        this.load();
+      },
+      error: (e) => {
+        this.saving.set(false);
+        this.error.set(e.error?.message || 'Approval failed.');
+      }
+    });
+  }
+
+  reject(r: AdmissionRow) {
+    if (!this.decisionReason.trim()) {
+      this.error.set('You must provide a reason to reject.');
+      return;
+    }
+    if (!confirm('Are you sure you want to reject this application?')) return;
+    
+    this.saving.set(true);
+    this.api.reject(Number(r.id), this.decisionReason).subscribe({
+      next: () => {
+        this.saving.set(false);
+        this.selected.set(null);
+        this.load();
+      },
+      error: (e) => {
+        this.saving.set(false);
+        this.error.set(e.error?.message || 'Rejection failed.');
+      }
+    });
   }
 }
