@@ -3,7 +3,7 @@ import { authGuard, dashboardGuard, permissionGuard, roleGuard } from './guards/
 import { PublicLayoutComponent } from './layouts/public-layout';
 
 export const routes: Routes = [
-  // ... public routes remain the same ...
+  // ============== PUBLIC ==============
   {
     path: '',
     component: PublicLayoutComponent,
@@ -17,13 +17,14 @@ export const routes: Routes = [
     ],
   },
 
+  // ============== LOGIN ==============
   {
     path: 'login',
     loadComponent: () => import('./pages/login/login').then(m => m.LoginComponent),
     title: 'Sign in | DIDES',
   },
 
-  // ---------- Dashboards ----------
+  // ============== DASHBOARDS ==============
   {
     path: 'dashboard',
     loadComponent: () => import('./pages/dashboard/dashboard-shell').then(m => m.DashboardShellComponent),
@@ -31,17 +32,39 @@ export const routes: Routes = [
     children: [
       // Redirect /dashboard to role-specific home
       { path: '', pathMatch: 'full', canActivate: [dashboardGuard], children: [] },
-      
-      // ✅ STUDENT DASHBOARD (Fixed to use roleGuard)
+
+      // ---------------- STUDENT ROUTES ----------------
       {
         path: 'student',
         canActivate: [roleGuard],
         data: { roles: ['STUDENT'] },
         loadComponent: () => import('./pages/dashboard/student-dashboard').then(m => m.StudentDashboardComponent),
-        title: 'My account | DIDES',
+        title: 'My Dashboard | DIDES',
+      },
+      {
+        path: 'student/academics',
+        canActivate: [roleGuard],
+        data: { roles: ['STUDENT'] },
+        loadComponent: () => import('./pages/dashboard/student-academics').then(m => m.StudentAcademicsComponent),
+        title: 'My Academic Record | DIDES',
       },
 
-      // ✅ ADMIN DASHBOARD
+      // ---------------- ADMIN ROUTES ----------------
+      // ⚠️ IMPORTANT: Specific paths MUST come BEFORE the generic 'admin' route
+      {
+        path: 'admin/subjects',
+        canActivate: [permissionGuard],
+        data: { permissions: ['COURSE_CREATE'] },
+        loadComponent: () => import('./pages/dashboard/manage-subjects').then(m => m.ManageSubjectsComponent),
+        title: 'Manage Subjects | DIDES',
+      },
+      {
+        path: 'admin/grades',
+        canActivate: [permissionGuard],
+        data: { permissions: ['COURSE_CREATE'] },
+        loadComponent: () => import('./pages/dashboard/enter-grades').then(m => m.EnterGradesComponent),
+        title: 'Enter Grades | DIDES',
+      },
       {
         path: 'admin',
         canActivate: [roleGuard],
@@ -49,8 +72,8 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/dashboard/admin-dashboard').then(m => m.AdminDashboardComponent),
         title: 'Admin Dashboard | DIDES',
       },
-      
-      // Users Management
+
+      // ---------------- SHARED STAFF ROUTES ----------------
       {
         path: 'users',
         canActivate: [permissionGuard],
@@ -58,19 +81,17 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/dashboard/staff-dashboard').then(m => m.StaffDashboardComponent),
         title: 'User Management | DIDES',
       },
-      
-      // Admissions Management
       {
         path: 'admissions',
         canActivate: [permissionGuard],
         data: { permissions: ['ADMISSION_READ'] },
         loadComponent: () => import('./pages/dashboard/admissions-list').then(m => m.AdmissionsListComponent),
-        title: 'All admissions | DIDES',
+        title: 'Admissions | DIDES',
       },
     ],
   },
 
-  // ... portal routes remain the same ...
+  // ============== PORTAL ==============
   {
     path: 'portal',
     loadComponent: () => import('./pages/portal/portal-shell').then(m => m.PortalShellComponent),
